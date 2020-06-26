@@ -42,8 +42,8 @@ def load_sample(fn0, fn1, disp0):
     img1, gray1 = load_image(fn1)
     
     # Convert the images to PyTorch tensors.
-    t0 = convert_2_tensor(gray0.astype(np.float32) / 255.0)
-    t1 = convert_2_tensor(gray1.astype(np.float32) / 255.0)
+    t0 = convert_2_tensor(gray0.astype(np.float32) / 255.0 - 0.5)
+    t1 = convert_2_tensor(gray1.astype(np.float32) / 255.0 - 0.5)
 
     # Load the disparity.
     disp = load_disp(disp0)
