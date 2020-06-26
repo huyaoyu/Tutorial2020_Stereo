@@ -70,6 +70,7 @@ def load_model(model, modelname):
                 preTrainDictTemp[kk] = v
 
         preTrainDict = preTrainDictTemp
+        print("DataParallel version OK.")
 
     if ( 0 == len(preTrainDict) ):
         raise Exception("Could not load model from %s." % (modelname), "load_model")
