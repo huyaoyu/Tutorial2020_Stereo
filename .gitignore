@@ -6,4 +6,7 @@ Data/
 data/
 Build/
 build/
+Correlation/CorrelationCUDA/build/
+Correlation/CorrelationCUDA/Corr2DCUDA*/
+Correlation/CorrelationCUDA/dist/
 
