@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import time
 
 import torch
 
@@ -59,8 +60,14 @@ def predict( model, sample ):
     model.eval()
     
     with torch.no_grad():
+        startTime = time.time()
+
         disp0, disp1, disp2, disp3, disp4, disp5 \
             = model(sample["img0"], sample["img1"], torch.Tensor([0]), torch.Tensor([0]))
+
+        endTime = time.time()
+    
+    print("Predict in %fs. " % ( endTime - startTime ))
 
     return disp0.squeeze(0).squeeze(0)
 
