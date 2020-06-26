@@ -67,7 +67,7 @@ def predict( model, sample ):
 
         endTime = time.time()
     
-    print("Predict in %fs. " % ( endTime - startTime ))
+        print("Predict in %fs. " % ( endTime - startTime ))
 
     return disp0.squeeze(0).squeeze(0)
 
