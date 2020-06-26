@@ -110,10 +110,10 @@ def draw( sampleDict, pred ):
 
 def main():
     print("Local test the correlation disparity model. ")
-    psmnu  = load_model()
-    sample = load_sample_data()
-    pred   = predict(psmnu, sample)
-    pred   = pred.cpu()
+    corrDisp = load_model()
+    sample   = load_sample_data()
+    pred     = predict(corrDisp, sample)
+    pred     = pred.cpu()
     draw(sample, pred)
 
     return 0
