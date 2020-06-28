@@ -18,6 +18,14 @@ def convert_colorcet_2_array(ccArray):
 
     return cmap
 
+def convert_not_finite_values(x, v):
+    mask = np.logical_not( np.isfinite(x) )
+
+    x = x.copy()
+    x[mask] = v
+
+    return x
+
 @cuda.jit
 def k_convert_float_2_rgb(data, cmap, m0, m1, outImg):
     """
@@ -151,9 +159,10 @@ def visualize_results_with_true_disparity( \
 
     # Image dimension.
     H, W = trueDisp.shape
-
+    
     # Convert the true disparity.
-    limits = [ trueDisp.min(), trueDisp.max() ]
+    trueDisp    = convert_not_finite_values(trueDisp, 0)
+    limits      = [ trueDisp.min(), trueDisp.max() ]
     trueDispImg = float_2_rgb(trueDisp, cmapDisp, limits)
     disp0Img    = float_2_rgb(disp0,    cmapDisp, limits)
 

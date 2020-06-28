@@ -1,5 +1,6 @@
 
 import cv2
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -14,148 +15,220 @@ from Model.PWCNetStereo import PWCNetStereoRes as CorrDispModel
 import SampleLoader
 from Visualization import visualize_results_with_true_disparity
 
-def load_sample_data(flagGray=False, flagCuda=True):
-    fn0 = '../SampleData/SceneFlow_FlyingThings3D/Left/0006.png'
-    fn1 = '../SampleData/SceneFlow_FlyingThings3D/Right/0006.png'
-    fnD = '../SampleData/SceneFlow_FlyingThings3D/Disparity/0006.pfm'
-
-    sampleDict = SampleLoader.load_sample(fn0, fn1, fnD, flagGray=flagGray)
-
-    H = sampleDict['t0'].size(2)
-
-    if ( H <= 512 ):
-        raise Exception("Image height must be larger than 512 pixels. ")
-
-    startIdx = int( max( ( H - 512 ) // 2 - 1, 0 ) )
-    endIdx   = startIdx + 512 # One pass the end.
-
-    # Crop to correct size.
-    sampleDict[ 'img0'] = sampleDict[ 'img0'][startIdx:endIdx, :]
-    sampleDict[ 'img1'] = sampleDict[ 'img1'][startIdx:endIdx, :]
-    sampleDict[   't0'] = sampleDict[   't0'][:, :, startIdx:endIdx, :]
-    sampleDict[   't1'] = sampleDict[   't1'][:, :, startIdx:endIdx, :]
-    sampleDict['disp0'] = sampleDict['disp0'][:, :, startIdx:endIdx, :]
-
-    if ( flagCuda ):
-        sampleDict['t0'] = sampleDict['t0'].cuda()
-        sampleDict['t1'] = sampleDict['t1'].cuda()
-        sampleDict['disp0'] = sampleDict['disp0'].cuda()
-
-    return sampleDict
-
-def load_model(flagGray=False, flagCuda=True):
-    params = ModelParams()
-    params.set_max_disparity(4)
-    params.corrKernelSize = 1
-    params.amp = 1
-    params.flagGray = flagGray
-
-    corrDispModel = CorrDispModel(params)
-    if (flagGray):
-        SampleLoader.load_model(corrDispModel, "./PreTrained/ERFFK3_01_PWCNS_00.pkl")
-    else:
-        SampleLoader.load_model(corrDispModel, "./PreTrained/ERFFK1C_01_PWCNS_00.pkl")
-
-    corrDispModel = torch.nn.DataParallel(corrDispModel)
-
-    if ( flagCuda ):
-        # corrDispModel.set_cpu_mode()
-        corrDispModel.cuda()
-
-    return corrDispModel
-
-def predict( model, sample ):
-    model.eval()
+def read_cases(fn):
+    cases = None
     
-    with torch.no_grad():
-        startTime = time.time()
-
-        disp0, disp1, disp2, disp3, disp4, disp5 \
-            = model(sample['t0'], sample['t1'], torch.Tensor([0]), torch.Tensor([0]))
-
-        endTime = time.time()
+    with open(fn, 'r') as fp:
+        cases = json.load(fp)
     
-        print("Predict in %fs. " % ( endTime - startTime ))
+    if ( cases is None ):
+        raise Exception("Failed to read any cases. ")
 
-    return disp0.squeeze(0).squeeze(0)
+    return cases
 
-def draw( sampleDict, pred ):
-    img0  = sampleDict['img0']
-    img1  = sampleDict['img1']
-    disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
-    pred  = pred.cpu()
+class Predictor(object):
+    def __init__(self, name='Default'):
+        super(Predictor, self).__init__()
 
-    fig = plt.figure()
-    ax = fig.add_subplot(2,2,1)
-    plt.tight_layout()
-    ax.axis('off')
-    ax.set_title('Ref.')
-    ax.imshow(img0)
+        self.name = name
+        self.model = None # The actual model.
 
-    ax = fig.add_subplot(2,2,3)
-    # plt.tight_layout()
-    ax.axis('off')
-    ax.set_title('Tst.')
-    ax.imshow(img1)
+        self.flagGray = False
+        self.flagCuda = True
 
-    dispMax = disp0.max()
-    dispMin = disp0.min()
+        self.sizeBase = 32
 
-    ax = fig.add_subplot(2,2,2)
-    # plt.tight_layout()
-    ax.axis('off')
-    ax.set_title('disp0')
+    def find_closest(self, x):
+        return x//self.sizeBase * self.sizeBase
+    
+    def find_crop_indices(self, H, W):
+        # Find the closest multiple of self.sizeBase.
+        h = self.find_closest(H)
+        w = self.find_closest(W)
 
-    disp0 = disp0 - dispMin
-    disp0 = disp0 / ( dispMax - dispMin )
+        assert(h > 2)
+        assert(w > 2)
 
-    ax.imshow(disp0)
+        startIdxH = int( max( ( H - h ) // 2 - 1, 0 ) )
+        endIdxH   = startIdxH + h # One pass the end.
 
-    ax = fig.add_subplot(2,2,4)
-    # plt.tight_layout()
-    ax.axis('off')
-    ax.set_title('pred')
+        startIdxW = int( max( ( W - w ) // 2 - 1, 0 ) )
+        endIdxW   = startIdxW + w # One pass the end.
 
-    pred = pred - dispMin
-    pred = pred / ( dispMax - dispMin )
+        return startIdxH, endIdxH, startIdxW, endIdxW
 
-    ax.imshow(pred)
+    def load_sample_data(self, fn0, fn1, fnD):
 
-    plt.show()
-    plt.close(fig)
+        sampleDict = SampleLoader.load_sample(fn0, fn1, fnD, flagGray=self.flagGray)
 
-def visualize( sampleDict, pred, fn=None ):
-    img0  = sampleDict['img0']
-    # img1  = sampleDict['img1']
-    disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
-    pred  = pred.cpu()
+        H, W = sampleDict['t0'].size()[2:4]
 
-    visImg, diffStat = visualize_results_with_true_disparity( \
-        img0, disp0, pred )
+        startIdxH, endIdxH, startIdxW, endIdxW = self.find_crop_indices(H, W)
 
-    print("Mean error = %f, std = %f. " % ( diffStat[0], diffStat[1] ))
+        # Crop to correct size.
+        sampleDict[ 'img0'] = sampleDict[ 'img0'][startIdxH:endIdxH, startIdxW:endIdxW]
+        sampleDict[ 'img1'] = sampleDict[ 'img1'][startIdxH:endIdxH, startIdxW:endIdxW]
+        sampleDict[   't0'] = sampleDict[   't0'][:, :, startIdxH:endIdxH, startIdxW:endIdxW]
+        sampleDict[   't1'] = sampleDict[   't1'][:, :, startIdxH:endIdxH, startIdxW:endIdxW]
+        sampleDict['disp0'] = sampleDict['disp0'][:, :, startIdxH:endIdxH, startIdxW:endIdxW]
 
-    if ( fn is not None ):
-        Filesystem.test_directory_by_filename(fn)
-        cv2.imwrite( fn, visImg )
-        print("Result visualization saved to %s. " % (fn))
+        if ( self.flagCuda ):
+            sampleDict['t0'] = sampleDict['t0'].cuda()
+            sampleDict['t1'] = sampleDict['t1'].cuda()
+            sampleDict['disp0'] = sampleDict['disp0'].cuda()
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.axis('off')
-    ax.imshow(cv2.cvtColor(visImg, cv2.COLOR_BGR2RGB))
+        return sampleDict
 
-    plt.show()
-    plt.close(fig)
+    def load_model(self, fn, flagGray=False, maxDisp=4, kernalSize=1):
+        self.flagGray = flagGray
+
+        params = ModelParams()
+        params.set_max_disparity(maxDisp)
+        params.corrKernelSize = kernalSize
+        params.amp = 1
+        params.flagGray = self.flagGray
+
+        corrDispModel = CorrDispModel(params)
+        SampleLoader.load_model(corrDispModel, fn)
+
+        corrDispModel = torch.nn.DataParallel(corrDispModel)
+
+        if ( self.flagCuda ):
+            corrDispModel.cuda()
+
+        self.model = corrDispModel
+
+    def predict( self, sample ):
+        self.model.eval()
+        
+        with torch.no_grad():
+            startTime = time.time()
+
+            disp0, disp1, disp2, disp3, disp4, disp5 \
+                = self.model(sample['t0'], sample['t1'], torch.Tensor([0]), torch.Tensor([0]))
+
+            endTime = time.time()
+        
+            print("Predict in %fs. Size HxW: %dx%d. " % \
+                ( endTime - startTime, sample['t0'].size(2), sample['t0'].size(3) ))
+
+        return disp0.squeeze(0).squeeze(0)
+
+    def draw(self, sampleDict, pred ):
+        img0  = sampleDict['img0']
+        img1  = sampleDict['img1']
+        disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
+        pred  = pred.cpu()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(2,2,1)
+        plt.tight_layout()
+        ax.axis('off')
+        ax.set_title('Ref.')
+        ax.imshow(img0)
+
+        ax = fig.add_subplot(2,2,3)
+        # plt.tight_layout()
+        ax.axis('off')
+        ax.set_title('Tst.')
+        ax.imshow(img1)
+
+        dispMax = disp0.max()
+        dispMin = disp0.min()
+
+        ax = fig.add_subplot(2,2,2)
+        # plt.tight_layout()
+        ax.axis('off')
+        ax.set_title('disp0')
+
+        disp0 = disp0 - dispMin
+        disp0 = disp0 / ( dispMax - dispMin )
+
+        ax.imshow(disp0)
+
+        ax = fig.add_subplot(2,2,4)
+        # plt.tight_layout()
+        ax.axis('off')
+        ax.set_title('pred')
+
+        pred = pred - dispMin
+        pred = pred / ( dispMax - dispMin )
+
+        ax.imshow(pred)
+
+        plt.show()
+        plt.close(fig)
+
+    def visualize( self, sampleDict, pred, fn=None ):
+        img0  = sampleDict['img0']
+        # img1  = sampleDict['img1']
+        disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
+        pred  = pred.cpu()
+
+        visImg, diffStat = visualize_results_with_true_disparity( \
+            img0, disp0, pred )
+
+        print("Mean error = %f, std = %f. " % ( diffStat[0], diffStat[1] ))
+
+        if ( fn is not None ):
+            Filesystem.test_directory_by_filename(fn)
+            cv2.imwrite( fn, visImg )
+            print("Result visualization saved to %s. " % (fn))
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.axis('off')
+        ax.imshow(cv2.cvtColor(visImg, cv2.COLOR_BGR2RGB))
+
+        plt.show()
+        plt.close(fig)
+
+    def __call__(self, caseDict, resultFn):
+        if ( self.model is None ):
+            raise Exception("Must load model first. ")
+
+        sample = self.load_sample_data( 
+            caseDict['fn0'], caseDict['fn1'], caseDict['fnD'])
+        pred   = self.predict(sample)
+        # self.draw(sample, pred)
+        self.visualize(sample, pred, resultFn)
+
+    def __str__(self):
+        return '{}: flagGray={}, flagCuda={}. '.format( \
+            self.name, self.flagGray, self.flagCuda )
 
 def main():
     print("Local test the correlation disparity model. ")
+    plt.close('all')
+
+    # Read cases.
+    cases = read_cases('./Cases.json')['cases']
+
     flagGray = False
-    corrDisp = load_model(flagGray=flagGray)
-    sample   = load_sample_data(flagGray=flagGray)
-    pred     = predict(corrDisp, sample)
-    # draw(sample, pred)
-    visualize(sample, pred, 'VisResultCorr.png')
+
+    # Create the predictor.
+    predictorC = Predictor('CorrColor')
+    predictorC.load_model('./PreTrained/ERFFK1C_01_PWCNS_00.pkl', flagGray=False, kernalSize=1)
+    print(predictorC)
+    
+    # Predict.
+    for case in cases:
+        print('>>>(color) %s' % ( case['fn0']) )
+        resultFn = '%s_C.png' % ( case['name'] )
+        predictorC(case, resultFn)
+
+    # Create a grayscale predictor.
+    predictorG = Predictor('CorrGray')
+    predictorG.load_model('./PreTrained/ERFFK1_01_PWCNS_00.pkl', flagGray=True, kernalSize=1)
+    print(predictorG)
+
+    # Predict.
+    for case in cases:
+        print('>>>(Grayscale) %s' % case['fn0'])
+        resultFn = '%s_G.png' % ( case['name'] )
+        predictorG(case, resultFn)
+
+    print('Done. ')
 
     return 0
 

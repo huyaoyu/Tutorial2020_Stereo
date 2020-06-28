@@ -1,0 +1,16 @@
+{
+    "cases": [
+        {
+            "fn0": "../SampleData/Middlebury_E3/TeddyH/im0.png", 
+            "fn1": "../SampleData/Middlebury_E3/TeddyH/im1.png", 
+            "fnD": "../SampleData/Middlebury_E3/TeddyH/disp0GT.pfm",
+            "name": "ME_TeddyH"
+        },
+        {
+            "fn0": "../SampleData/SceneFlow_FlyingThings3D/Left/0006.png", 
+            "fn1": "../SampleData/SceneFlow_FlyingThings3D/Right/0006.png", 
+            "fnD": "../SampleData/SceneFlow_FlyingThings3D/Disparity/0006.pfm",
+            "name": "SceneFlow"
+        }
+    ]
+}

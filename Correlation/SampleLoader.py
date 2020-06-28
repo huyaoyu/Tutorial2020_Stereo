@@ -5,6 +5,8 @@ import os
 import torch
 import torchvision
 
+from CommonPython.Filesystem import Filesystem
+
 from IO import readPFM
 
 def test_file(fn):
@@ -32,7 +34,17 @@ def convert_2_tensor(img):
 def load_disp(fn):
     test_file(fn)
 
-    disp, scale = readPFM(fn)
+    # Get the ext of the filename.
+    parts = Filesystem.get_filename_parts(fn)
+
+    ext = parts[2].lower()
+
+    if ( '.pfm' == ext ):
+        disp, scale = readPFM(fn)
+    elif ( '.npy' == ext ):
+        disp = np.load(fn).astype(np.float32)
+    else:
+        raise Exception("Not supported ext {}. ".format(ext))
 
     return disp
 

@@ -299,12 +299,12 @@ class WarpByDisparity(nn.Module):
 
         vgrid = vgrid.permute(0,2,3,1)
 
-        output = nn.functional.grid_sample(x, vgrid)
+        output = nn.functional.grid_sample(x, vgrid, align_corners=False)
         
         mask = torch.ones(x.size())
         if ( x.is_cuda ):
             mask = mask.cuda()
-        mask = nn.functional.grid_sample(mask, vgrid)
+        mask = nn.functional.grid_sample(mask, vgrid, align_corners=False)
         
         mask[mask<0.9999] = 0
         mask[mask>0]      = 1
