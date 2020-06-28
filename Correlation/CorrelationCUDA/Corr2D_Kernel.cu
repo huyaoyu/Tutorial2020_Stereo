@@ -48,8 +48,8 @@ __device__ __forceinline__ scalar_t d_sigmoid(scalar_t x)
  */
 template <typename scalar_t> 
 __global__ void k_from_BCHW_2_BHWC_padded(
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input, 
-    torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> output,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input, 
+    torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> output,
     int padding )
 {
     const int idxX    = blockIdx.x * blockDim.x + threadIdx.x;
@@ -88,8 +88,8 @@ __global__ void k_from_BCHW_2_BHWC_padded(
  */
 template <typename scalar_t>
 __global__ void k_kernel_norm( 
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input,
-    torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> output,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input,
+    torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> output,
     int kernelSize)
 {
     const int idxB = blockIdx.z;
@@ -184,9 +184,9 @@ __global__ void k_kernel_norm(
  */
 template <typename scalar_t>
 __global__ void k_corr_2d_forward( 
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input0,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input1,
-    torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> output,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input0,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input1,
+    torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> output,
     int padding, int kernelSize, int maxDisplacement, int strideK, int strideD)
 {
     const int idxC    = threadIdx.x;
@@ -307,9 +307,9 @@ __global__ void k_corr_2d_forward(
 
 template <typename scalar_t> 
 __global__ void k_corr_2d_backward_0(
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> grad,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input1,
-    torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> output0,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> grad,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input1,
+    torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> output0,
     int padding, int kernelSize, int maxDisplacement, int strideK, int strideD )
 {
     const int x0 = blockIdx.x + padding;
@@ -400,9 +400,9 @@ __global__ void k_corr_2d_backward_0(
 
 template <typename scalar_t> 
 __global__ void k_corr_2d_backward_1(
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> grad,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input0,
-    torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> output1,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> grad,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input0,
+    torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> output1,
     int padding, int kernelSize, int maxDisplacement, int strideK, int strideD )
 {
     const int x1 = blockIdx.x + padding;
@@ -500,11 +500,11 @@ __global__ void k_corr_2d_backward_1(
  */
 template <typename scalar_t>
 __global__ void k_corr_2d_forward_zn( 
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input0,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input1,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> L0,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> L1,
-    torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> output,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input0,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input1,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> L0,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> L1,
+    torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> output,
     int padding, int kernelSize, int maxDisplacement, int strideK, int strideD)
 {
     const int idxC    = threadIdx.x;
@@ -629,13 +629,13 @@ __global__ void k_corr_2d_forward_zn(
 
 template <typename scalar_t> 
 __global__ void k_corr_2d_backward_zn_0(
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> grad,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input0,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input1,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> cr,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> L0,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> L1,
-    torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> output0,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> grad,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input0,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input1,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> cr,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> L0,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> L1,
+    torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> output0,
     int padding, int kernelSize, int maxDisplacement, int strideK, int strideD )
 {
     const int x0 = blockIdx.x + padding;
@@ -739,13 +739,13 @@ __global__ void k_corr_2d_backward_zn_0(
 
 template <typename scalar_t> 
 __global__ void k_corr_2d_backward_zn_1(
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> grad,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input0,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> input1,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> cr,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> L0,
-    const torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> L1,
-    torch::PackedTensorAccessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE> output1,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> grad,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input0,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> input1,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> cr,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> L0,
+    const torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> L1,
+    torch::PackedTensorAccessor32<scalar_t, 4, torch::RestrictPtrTraits> output1,
     int padding, int kernelSize, int maxDisplacement, int strideK, int strideD )
 {
     const int x1 = blockIdx.x + padding;
@@ -876,8 +876,8 @@ torch::Tensor from_BCHW_2_BHWC_padded_cuda( torch::Tensor input, int padding )
     // Kernel launch.
     AT_DISPATCH_FLOATING_TYPES( input.scalar_type(), "test_from_BCHW_2_BHWC_padded_cuda", ( [&] {
             k_from_BCHW_2_BHWC_padded<scalar_t><<<blocks, thrds>>>( 
-                input.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-                output.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
+                input.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+                output.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
                 padding );
         } ) );
 
@@ -929,8 +929,8 @@ torch::Tensor create_L(torch::Tensor r, const int kernelSize)
     // Kernel launch.
     AT_DISPATCH_FLOATING_TYPES( r.scalar_type(), "create_L", ( [&] {
         k_kernel_norm<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
-            r.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            L.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
+            r.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            L.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
             kernelSize );
     } ) );
 
@@ -1004,9 +1004,9 @@ std::vector<torch::Tensor> corr_2d_forward_cuda(
     // Kernel launch.
     AT_DISPATCH_FLOATING_TYPES( r0.scalar_type(), "corr_2d_forward_cuda", ( [&] {
         k_corr_2d_forward<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
-            r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            r1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            output.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
+            r0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            r1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            output.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
             padding, kernelSize, maxDisplacement, strideK, strideD );
     } ) );
 
@@ -1064,9 +1064,9 @@ std::vector<torch::Tensor> corr_2d_backward_cuda( torch::Tensor grad, torch::Ten
     // Kernel launch.
     AT_DISPATCH_FLOATING_TYPES( r0.scalar_type(), "corr_2d_backward_cuda_0", ( [&] {
         k_corr_2d_backward_0<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
-            grad.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            r1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            output0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
+            grad.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            r1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            output0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
             padding, kernelSize, maxDisplacement, strideK, strideD );
     } ) );
 
@@ -1082,9 +1082,9 @@ std::vector<torch::Tensor> corr_2d_backward_cuda( torch::Tensor grad, torch::Ten
     // Kernel launch.
     AT_DISPATCH_FLOATING_TYPES( r1.scalar_type(), "corr_2d_backward_cuda_1", ( [&] {
         k_corr_2d_backward_1<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
-            grad.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            output1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
+            grad.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            r0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            output1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
             padding, kernelSize, maxDisplacement, strideK, strideD );
     } ) );
 
@@ -1180,11 +1180,11 @@ std::vector<torch::Tensor> corr_2d_forward_zn_cuda(
     // Kernel launch.
     AT_DISPATCH_FLOATING_TYPES( r0.scalar_type(), "corr_2d_forward_zn_cuda", ( [&] {
         k_corr_2d_forward_zn<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
-            r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            r1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            L0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            L1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            output.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
+            r0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            r1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            L0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            L1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            output.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
             padding, kernelSize, maxDisplacement, strideK, strideD );
     } ) );
 
@@ -1243,13 +1243,13 @@ std::vector<torch::Tensor> corr_2d_backward_zn_cuda( torch::Tensor grad, torch::
     // Kernel launch.
     AT_DISPATCH_FLOATING_TYPES( r0.scalar_type(), "corr_2d_backward_zn_cuda_0", ( [&] {
         k_corr_2d_backward_zn_0<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
-            grad.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            r1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            cr.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            L0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            L1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            output0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
+            grad.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            r0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            r1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            cr.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            L0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            L1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            output0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
             padding, kernelSize, maxDisplacement, strideK, strideD );
     } ) );
 
@@ -1265,13 +1265,13 @@ std::vector<torch::Tensor> corr_2d_backward_zn_cuda( torch::Tensor grad, torch::
     // Kernel launch.
     AT_DISPATCH_FLOATING_TYPES( r1.scalar_type(), "corr_2d_backward_cuda_zn_1", ( [&] {
         k_corr_2d_backward_zn_1<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
-            grad.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            r1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            cr.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            L0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            L1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
-            output1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
+            grad.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            r0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            r1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            cr.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            L0.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            L1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
+            output1.packed_accessor32<scalar_t, 4, torch::RestrictPtrTraits>(),
             padding, kernelSize, maxDisplacement, strideK, strideD );
     } ) );
 
