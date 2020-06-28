@@ -24,7 +24,7 @@ def convert_not_finite_values(x, v):
     x = x.copy()
     x[mask] = v
 
-    return x
+    return x, mask
 
 @cuda.jit
 def k_convert_float_2_rgb(data, cmap, m0, m1, outImg):
@@ -161,24 +161,27 @@ def visualize_results_with_true_disparity( \
     H, W = trueDisp.shape
     
     # Convert the true disparity.
-    trueDisp    = convert_not_finite_values(trueDisp, 0)
-    limits      = [ trueDisp.min(), trueDisp.max() ]
+    trueDisp, nfMask = convert_not_finite_values(trueDisp, 0)
+    fMask = np.logical_not(nfMask) # Mask for the finite values.
+
+    limits      = [ trueDisp[fMask].min(), trueDisp[fMask].max() ]
     trueDispImg = float_2_rgb(trueDisp, cmapDisp, limits)
     disp0Img    = float_2_rgb(disp0,    cmapDisp, limits)
 
     # Mask trueDispImg.
     if ( trueDispMask is not None ):
-        mask_rgb_img(trueDispImg, np.logical_not(trueDispMask))
+        validMask = np.logical_and( fMask, trueDispMask )
+    else:
+        validMask = fMask
+    
+    mask_rgb_img(trueDispImg, np.logical_not(validMask))
 
     diffDisp0 = disp0 - trueDisp
 
     diffDisp0Img = float_2_rgb( diffDisp0, cmapDiff, [ -50, 50 ] )
 
     # The statistics.
-    if ( trueDispMask is not None ):
-        diffDisp0Stat = diff_statistics(diffDisp0[trueDispMask])
-    else:
-        diffDisp0Stat = diff_statistics(diffDisp0)
+    diffDisp0Stat = diff_statistics(diffDisp0[validMask])
 
     # Statistics string.
     strDiffDisp0Stat = "A: %.3f, S: %.3f" % ( diffDisp0Stat[0], diffDisp0Stat[1] )
