@@ -149,7 +149,7 @@ def main():
     sample = load_sample_data(flagGray=flagGray)
     pred, sig = predict(psmnu, sample)
     # draw(sample, pred)
-    visualize(sample, pred, sig, 'VisResult.png')
+    visualize(sample, pred, sig, 'VisResultUnct.png')
 
     return 0
 
