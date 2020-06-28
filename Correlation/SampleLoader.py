@@ -85,14 +85,17 @@ def load_sample(fn0, fn1, disp0, flagGray=False):
         t0 = convert_2_tensor(normalizer(img0.astype(np.float32)))
         t1 = convert_2_tensor(normalizer(img1.astype(np.float32)))
 
-    # Load the disparity.
-    disp = load_disp(disp0)
-    td = convert_2_tensor(disp.astype(np.float32))
-
     # Make dummy mini-batch.
     t0 = t0.unsqueeze(0)
     t1 = t1.unsqueeze(0)
-    td = td.unsqueeze(0)
+
+    # Load the disparity.
+    if ( disp0 is not None ):
+        disp = load_disp(disp0)
+        td = convert_2_tensor(disp.astype(np.float32))
+        td = td.unsqueeze(0)
+    else:
+        td = None
 
     if ( flagGray ):
         return { \

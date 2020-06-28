@@ -1,6 +1,11 @@
 {
     "cases": [
         {
+            "fn0": "../SampleData/Shimizu/ShimizuBeam08/Rectified_L_color_ds.jpg", 
+            "fn1": "../SampleData/Shimizu/ShimizuBeam08/Rectified_R_color_ds.jpg", 
+            "name": "Shimizu_ShimizuBeam08"
+        },
+        {
             "fn0": "../SampleData/Middlebury_E3/TeddyH/im0.png", 
             "fn1": "../SampleData/Middlebury_E3/TeddyH/im1.png", 
             "fnD": "../SampleData/Middlebury_E3/TeddyH/disp0GT.pfm",

@@ -26,6 +26,13 @@ def read_cases(fn):
 
     return cases
 
+def permute_image(img):
+    if ( 3 == img.ndim ):
+        if ( 3 == img.shape[2] ):
+            return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    return img
+
 class Predictor(object):
     def __init__(self, name='Default'):
         super(Predictor, self).__init__()
@@ -70,12 +77,16 @@ class Predictor(object):
         sampleDict[ 'img1'] = sampleDict[ 'img1'][startIdxH:endIdxH, startIdxW:endIdxW]
         sampleDict[   't0'] = sampleDict[   't0'][:, :, startIdxH:endIdxH, startIdxW:endIdxW]
         sampleDict[   't1'] = sampleDict[   't1'][:, :, startIdxH:endIdxH, startIdxW:endIdxW]
-        sampleDict['disp0'] = sampleDict['disp0'][:, :, startIdxH:endIdxH, startIdxW:endIdxW]
+
+        if ( sampleDict['disp0'] is not None ):
+            sampleDict['disp0'] = sampleDict['disp0'][:, :, startIdxH:endIdxH, startIdxW:endIdxW]
 
         if ( self.flagCuda ):
             sampleDict['t0'] = sampleDict['t0'].cuda()
             sampleDict['t1'] = sampleDict['t1'].cuda()
-            sampleDict['disp0'] = sampleDict['disp0'].cuda()
+
+            if ( sampleDict['disp0'] is not None ):
+                sampleDict['disp0'] = sampleDict['disp0'].cuda()
 
         return sampleDict
 
@@ -114,37 +125,43 @@ class Predictor(object):
 
         return disp0.squeeze(0).squeeze(0)
 
-    def draw(self, sampleDict, pred ):
+    def draw(self, sampleDict, pred, fn=None):
         img0  = sampleDict['img0']
         img1  = sampleDict['img1']
-        disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
         pred  = pred.cpu()
+
+        if ( sampleDict['disp0'] is not None ):
+            disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
+            dispMax = disp0.max()
+            dispMin = disp0.min()
+        else:
+            dispMax = pred.max()
+            dispMin = pred.min()
+            disp0 = None
 
         fig = plt.figure()
         ax = fig.add_subplot(2,2,1)
         plt.tight_layout()
         ax.axis('off')
         ax.set_title('Ref.')
-        ax.imshow(img0)
+        ax.imshow(permute_image(img0))
 
         ax = fig.add_subplot(2,2,3)
         # plt.tight_layout()
         ax.axis('off')
         ax.set_title('Tst.')
-        ax.imshow(img1)
+        ax.imshow(permute_image(img1))
 
-        dispMax = disp0.max()
-        dispMin = disp0.min()
+        if ( disp0 is not None ):
+            ax = fig.add_subplot(2,2,2)
+            # plt.tight_layout()
+            ax.axis('off')
+            ax.set_title('disp0')
 
-        ax = fig.add_subplot(2,2,2)
-        # plt.tight_layout()
-        ax.axis('off')
-        ax.set_title('disp0')
+            disp0 = disp0 - dispMin
+            disp0 = disp0 / ( dispMax - dispMin )
 
-        disp0 = disp0 - dispMin
-        disp0 = disp0 / ( dispMax - dispMin )
-
-        ax.imshow(disp0)
+            ax.imshow(disp0)
 
         ax = fig.add_subplot(2,2,4)
         # plt.tight_layout()
@@ -155,6 +172,9 @@ class Predictor(object):
         pred = pred / ( dispMax - dispMin )
 
         ax.imshow(pred)
+
+        if ( fn is not None ):
+            fig.savefig(fn)
 
         plt.show()
         plt.close(fig)
@@ -187,11 +207,20 @@ class Predictor(object):
         if ( self.model is None ):
             raise Exception("Must load model first. ")
 
+        # Check if we have true disparity.
+        if 'fnD' in caseDict.keys():
+            fnD = caseDict['fnD']
+        else:
+            fnD = None
+
         sample = self.load_sample_data( 
-            caseDict['fn0'], caseDict['fn1'], caseDict['fnD'])
+            caseDict['fn0'], caseDict['fn1'], fnD)
         pred   = self.predict(sample)
-        # self.draw(sample, pred)
-        self.visualize(sample, pred, resultFn)
+
+        if ( fnD is not None ):
+            self.visualize(sample, pred, resultFn)
+        else:
+            self.draw(sample, pred, resultFn)
 
     def __str__(self):
         return '{}: flagGray={}, flagCuda={}. '.format( \
