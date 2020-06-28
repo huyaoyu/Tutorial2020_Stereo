@@ -7,17 +7,20 @@ import time
 
 import torch
 
+from CommonPython.Filesystem import Filesystem
+
 from Model.PyramidNet import PSMNetWithUncertainty as PSMNU
 import SampleLoader
+from Visualization import visualize_results_with_true_disparity
 
-def load_sample_data(flagCuda=True):
+def load_sample_data(flagGray=False, flagCuda=True):
     fn0 = '../SampleData/SceneFlow_FlyingThings3D/Left/0006.png'
     fn1 = '../SampleData/SceneFlow_FlyingThings3D/Right/0006.png'
     fnD = '../SampleData/SceneFlow_FlyingThings3D/Disparity/0006.pfm'
 
-    sampleDict = SampleLoader.load_sample(fn0, fn1, fnD)
+    sampleDict = SampleLoader.load_sample(fn0, fn1, fnD, flagGray=flagGray)
 
-    H = sampleDict['img0'].size(2)
+    H = sampleDict['t0'].size(2)
 
     if ( H <= 512 ):
         raise Exception("Image height must be larger than 512 pixels. ")
@@ -26,13 +29,15 @@ def load_sample_data(flagCuda=True):
     endIdx   = startIdx + 512 # One pass the end.
 
     # Crop to correct size.
-    sampleDict[ 'img0'] = sampleDict[ 'img0'][:, :, startIdx:endIdx, :]
-    sampleDict[ 'img1'] = sampleDict[ 'img1'][:, :, startIdx:endIdx, :]
+    sampleDict[ 'img0'] = sampleDict[ 'img0'][startIdx:endIdx, :]
+    sampleDict[ 'img1'] = sampleDict[ 'img1'][startIdx:endIdx, :]
+    sampleDict[   't0'] = sampleDict[   't0'][:, :, startIdx:endIdx, :]
+    sampleDict[   't1'] = sampleDict[   't1'][:, :, startIdx:endIdx, :]
     sampleDict['disp0'] = sampleDict['disp0'][:, :, startIdx:endIdx, :]
 
     if ( flagCuda ):
-        sampleDict['img0'] = sampleDict['img0'].cuda()
-        sampleDict['img1'] = sampleDict['img1'].cuda()
+        sampleDict['t0'] = sampleDict['t0'].cuda()
+        sampleDict['t1'] = sampleDict['t1'].cuda()
         sampleDict['disp0'] = sampleDict['disp0'].cuda()
 
     return sampleDict
@@ -54,20 +59,24 @@ def predict( model, sample ):
     with torch.no_grad():
         startTime = time.time()
 
-        output3, logSigSqu = model(sample["img0"], sample["img1"])
+        output3, logSigSqu = model(sample["t0"], sample["t1"])
 
         endTime = time.time()
+
+        sig = torch.exp( logSigSqu / 2.0 )
     
         print("Predict in %fs. " % ( endTime - startTime ))
 
     pred = output3.squeeze(0).squeeze(0)
+    sig  = sig.squeeze(0).squeeze(0)
 
-    return pred
+    return pred, sig
 
 def draw( sampleDict, pred ):
-    img0  = sampleDict['img0'].squeeze(0).squeeze(0).cpu().numpy()
-    img1  = sampleDict['img1'].squeeze(0).squeeze(0).cpu().numpy()
+    img0  = sampleDict['img0']
+    img1  = sampleDict['img1']
     disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
+    pred  = pred.cpu()
 
     fig = plt.figure()
     ax = fig.add_subplot(2,2,1)
@@ -108,13 +117,39 @@ def draw( sampleDict, pred ):
     plt.show()
     plt.close(fig)
 
+def visualize( sampleDict, pred, sig, fn=None ):
+    img0  = sampleDict['img0']
+    img1  = sampleDict['img1']
+    disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
+    pred  = pred.cpu().numpy()
+    sig   = sig.cpu().numpy()
+
+    visImg, diffStat = visualize_results_with_true_disparity( \
+        img0, img1, disp0, pred, sig )
+
+    print("Mean error = %f, std = %f. " % ( diffStat[0], diffStat[1] ))
+
+    if ( fn is not None ):
+        Filesystem.test_directory_by_filename(fn)
+        cv2.imwrite( fn, visImg )
+        print("Result visualization saved to %s. " % (fn))
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.axis('off')
+    ax.imshow(cv2.cvtColor(visImg, cv2.COLOR_BGR2RGB))
+
+    plt.show()
+    plt.close(fig)
+
 def main():
     print("Local test the PSMNU model. ")
+    flagGray = True
     psmnu  = load_model()
-    sample = load_sample_data()
-    pred   = predict(psmnu, sample)
-    pred   = pred.cpu()
-    draw(sample, pred)
+    sample = load_sample_data(flagGray=flagGray)
+    pred, sig = predict(psmnu, sample)
+    # draw(sample, pred)
+    visualize(sample, pred, sig, 'VisResult.png')
 
     return 0
 

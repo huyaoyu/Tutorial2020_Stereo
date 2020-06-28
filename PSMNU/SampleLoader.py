@@ -36,14 +36,42 @@ def load_disp(fn):
 
     return disp
 
-def load_sample(fn0, fn1, disp0):
+imagenet_stats = {'mean': [0.485, 0.456, 0.406],
+                   'std': [0.229, 0.224, 0.225]}
+
+class NormalizeRGB_OCV(object):
+    def __init__(self, s=1.0/255):
+        super(NormalizeRGB_OCV, self).__init__()
+        
+        self.s = s
+
+    def __call__(self, x):
+        """This is the OpenCV version. The order of the color channle is BGR. The order of dimension is HWC."""
+
+        x = np.copy(x) * self.s
+
+        # It is assumed that the data type of x is already floating point number.
+        # Note the order of channels. OpenCV uses BGR.
+        x[:, :, 0] = ( x[:, :, 0] - imagenet_stats["mean"][2] ) / imagenet_stats["std"][2]
+        x[:, :, 1] = ( x[:, :, 1] - imagenet_stats["mean"][1] ) / imagenet_stats["std"][1]
+        x[:, :, 2] = ( x[:, :, 2] - imagenet_stats["mean"][0] ) / imagenet_stats["std"][0]
+
+        return x
+
+def load_sample(fn0, fn1, disp0, flagGray=False):
     # Load the image by OpenCV
     img0, gray0 = load_image(fn0)
     img1, gray1 = load_image(fn1)
     
     # Convert the images to PyTorch tensors.
-    t0 = convert_2_tensor(gray0.astype(np.float32) / 255.0)
-    t1 = convert_2_tensor(gray1.astype(np.float32) / 255.0)
+    if ( flagGray ):
+        t0 = convert_2_tensor(gray0.astype(np.float32) / 255.0)
+        t1 = convert_2_tensor(gray1.astype(np.float32) / 255.0)
+    else:
+        normalizer = NormalizeRGB_OCV()
+
+        t0 = convert_2_tensor(normalizer(img0.astype(np.float32)))
+        t1 = convert_2_tensor(normalizer(img1.astype(np.float32)))
 
     # Load the disparity.
     disp = load_disp(disp0)
@@ -54,7 +82,16 @@ def load_sample(fn0, fn1, disp0):
     t1 = t1.unsqueeze(0)
     td = td.unsqueeze(0)
 
-    return {'img0': t0, 'img1': t1, 'disp0': td}
+    if ( flagGray ):
+        return { \
+            'img0': gray0, 'img1': gray1, \
+            't0': t0, 't1': t1, \
+            'disp0': td }
+    else:
+        return { \
+            'img0': img0, 'img1': img1, \
+            't0': t0, 't1': t1, \
+            'disp0': td }
 
 def load_model(model, modelname):
     preTrainDict = torch.load(modelname)
@@ -89,5 +126,12 @@ if __name__ == '__main__':
     fn1 = '../SampleData/SceneFlow_FlyingThings3D/Right/0006.png'
     fnD = '../SampleData/SceneFlow_FlyingThings3D/Disparity/0006.pfm'
 
-    sampleDict = load_sample(fn0, fn1, fnD)
+    sampleDictC = load_sample(fn0, fn1, fnD, flagGray=False)
+
+    # Show the dimensions of loaded sample.
+    print(sampleDictC['t0'].size())
+
+    sampleDictG = load_sample(fn0, fn1, fnD, flagGray=True)
+    # Show the dimensions of loaded sample.
+    print(sampleDictG['t0'].size())
 

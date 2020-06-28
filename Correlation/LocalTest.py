@@ -7,18 +7,21 @@ import time
 
 import torch
 
+from CommonPython.Filesystem import Filesystem
+
 from Model.PWCNetStereo import PWCNetStereoParams as ModelParams
 from Model.PWCNetStereo import PWCNetStereoRes as CorrDispModel
 import SampleLoader
+from Visualization import visualize_results_with_true_disparity
 
-def load_sample_data(flagCuda=True):
+def load_sample_data(flagGray=False, flagCuda=True):
     fn0 = '../SampleData/SceneFlow_FlyingThings3D/Left/0006.png'
     fn1 = '../SampleData/SceneFlow_FlyingThings3D/Right/0006.png'
     fnD = '../SampleData/SceneFlow_FlyingThings3D/Disparity/0006.pfm'
 
-    sampleDict = SampleLoader.load_sample(fn0, fn1, fnD)
+    sampleDict = SampleLoader.load_sample(fn0, fn1, fnD, flagGray=flagGray)
 
-    H = sampleDict['img0'].size(2)
+    H = sampleDict['t0'].size(2)
 
     if ( H <= 512 ):
         raise Exception("Image height must be larger than 512 pixels. ")
@@ -27,26 +30,31 @@ def load_sample_data(flagCuda=True):
     endIdx   = startIdx + 512 # One pass the end.
 
     # Crop to correct size.
-    sampleDict[ 'img0'] = sampleDict[ 'img0'][:, :, startIdx:endIdx, :]
-    sampleDict[ 'img1'] = sampleDict[ 'img1'][:, :, startIdx:endIdx, :]
+    sampleDict[ 'img0'] = sampleDict[ 'img0'][startIdx:endIdx, :]
+    sampleDict[ 'img1'] = sampleDict[ 'img1'][startIdx:endIdx, :]
+    sampleDict[   't0'] = sampleDict[   't0'][:, :, startIdx:endIdx, :]
+    sampleDict[   't1'] = sampleDict[   't1'][:, :, startIdx:endIdx, :]
     sampleDict['disp0'] = sampleDict['disp0'][:, :, startIdx:endIdx, :]
 
     if ( flagCuda ):
-        sampleDict['img0'] = sampleDict['img0'].cuda()
-        sampleDict['img1'] = sampleDict['img1'].cuda()
+        sampleDict['t0'] = sampleDict['t0'].cuda()
+        sampleDict['t1'] = sampleDict['t1'].cuda()
         sampleDict['disp0'] = sampleDict['disp0'].cuda()
 
     return sampleDict
 
-def load_model(flagCuda=True):
+def load_model(flagGray=False, flagCuda=True):
     params = ModelParams()
     params.set_max_disparity(4)
-    params.corrKernelSize = 3
+    params.corrKernelSize = 1
     params.amp = 1
-    params.flagGray = True
+    params.flagGray = flagGray
 
     corrDispModel = CorrDispModel(params)
-    SampleLoader.load_model(corrDispModel, "./PreTrained/ERFFK3_01_PWCNS_00.pkl")
+    if (flagGray):
+        SampleLoader.load_model(corrDispModel, "./PreTrained/ERFFK3_01_PWCNS_00.pkl")
+    else:
+        SampleLoader.load_model(corrDispModel, "./PreTrained/ERFFK1C_01_PWCNS_00.pkl")
 
     corrDispModel = torch.nn.DataParallel(corrDispModel)
 
@@ -63,7 +71,7 @@ def predict( model, sample ):
         startTime = time.time()
 
         disp0, disp1, disp2, disp3, disp4, disp5 \
-            = model(sample["img0"], sample["img1"], torch.Tensor([0]), torch.Tensor([0]))
+            = model(sample['t0'], sample['t1'], torch.Tensor([0]), torch.Tensor([0]))
 
         endTime = time.time()
     
@@ -72,9 +80,10 @@ def predict( model, sample ):
     return disp0.squeeze(0).squeeze(0)
 
 def draw( sampleDict, pred ):
-    img0  = sampleDict['img0'].squeeze(0).squeeze(0).cpu().numpy()
-    img1  = sampleDict['img1'].squeeze(0).squeeze(0).cpu().numpy()
+    img0  = sampleDict['img0']
+    img1  = sampleDict['img1']
     disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
+    pred  = pred.cpu()
 
     fig = plt.figure()
     ax = fig.add_subplot(2,2,1)
@@ -115,13 +124,38 @@ def draw( sampleDict, pred ):
     plt.show()
     plt.close(fig)
 
+def visualize( sampleDict, pred, fn=None ):
+    img0  = sampleDict['img0']
+    # img1  = sampleDict['img1']
+    disp0 = sampleDict['disp0'].squeeze(0).squeeze(0).cpu().numpy()
+    pred  = pred.cpu()
+
+    visImg, diffStat = visualize_results_with_true_disparity( \
+        img0, disp0, pred )
+
+    print("Mean error = %f, std = %f. " % ( diffStat[0], diffStat[1] ))
+
+    if ( fn is not None ):
+        Filesystem.test_directory_by_filename(fn)
+        cv2.imwrite( fn, visImg )
+        print("Result visualization saved to %s. " % (fn))
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.axis('off')
+    ax.imshow(cv2.cvtColor(visImg, cv2.COLOR_BGR2RGB))
+
+    plt.show()
+    plt.close(fig)
+
 def main():
     print("Local test the correlation disparity model. ")
-    corrDisp = load_model()
-    sample   = load_sample_data()
+    flagGray = False
+    corrDisp = load_model(flagGray=flagGray)
+    sample   = load_sample_data(flagGray=flagGray)
     pred     = predict(corrDisp, sample)
-    pred     = pred.cpu()
-    draw(sample, pred)
+    # draw(sample, pred)
+    visualize(sample, pred, 'VisResult.png')
 
     return 0
 
