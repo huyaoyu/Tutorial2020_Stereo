@@ -874,7 +874,7 @@ torch::Tensor from_BCHW_2_BHWC_padded_cuda( torch::Tensor input, int padding )
     }
 
     // Kernel launch.
-    AT_DISPATCH_FLOATING_TYPES( input.type(), "test_from_BCHW_2_BHWC_padded_cuda", ( [&] {
+    AT_DISPATCH_FLOATING_TYPES( input.scalar_type(), "test_from_BCHW_2_BHWC_padded_cuda", ( [&] {
             k_from_BCHW_2_BHWC_padded<scalar_t><<<blocks, thrds>>>( 
                 input.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
                 output.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
@@ -927,7 +927,7 @@ torch::Tensor create_L(torch::Tensor r, const int kernelSize)
     }
 
     // Kernel launch.
-    AT_DISPATCH_FLOATING_TYPES( r.type(), "create_L", ( [&] {
+    AT_DISPATCH_FLOATING_TYPES( r.scalar_type(), "create_L", ( [&] {
         k_kernel_norm<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
             r.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
             L.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
@@ -1002,7 +1002,7 @@ std::vector<torch::Tensor> corr_2d_forward_cuda(
     }
 
     // Kernel launch.
-    AT_DISPATCH_FLOATING_TYPES( r0.type(), "corr_2d_forward_cuda", ( [&] {
+    AT_DISPATCH_FLOATING_TYPES( r0.scalar_type(), "corr_2d_forward_cuda", ( [&] {
         k_corr_2d_forward<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
             r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
             r1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
@@ -1062,7 +1062,7 @@ std::vector<torch::Tensor> corr_2d_backward_cuda( torch::Tensor grad, torch::Ten
     }
 
     // Kernel launch.
-    AT_DISPATCH_FLOATING_TYPES( r0.type(), "corr_2d_backward_cuda_0", ( [&] {
+    AT_DISPATCH_FLOATING_TYPES( r0.scalar_type(), "corr_2d_backward_cuda_0", ( [&] {
         k_corr_2d_backward_0<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
             grad.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
             r1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
@@ -1080,7 +1080,7 @@ std::vector<torch::Tensor> corr_2d_backward_cuda( torch::Tensor grad, torch::Ten
     }
 
     // Kernel launch.
-    AT_DISPATCH_FLOATING_TYPES( r1.type(), "corr_2d_backward_cuda_1", ( [&] {
+    AT_DISPATCH_FLOATING_TYPES( r1.scalar_type(), "corr_2d_backward_cuda_1", ( [&] {
         k_corr_2d_backward_1<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
             grad.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
             r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
@@ -1178,7 +1178,7 @@ std::vector<torch::Tensor> corr_2d_forward_zn_cuda(
     }
 
     // Kernel launch.
-    AT_DISPATCH_FLOATING_TYPES( r0.type(), "corr_2d_forward_zn_cuda", ( [&] {
+    AT_DISPATCH_FLOATING_TYPES( r0.scalar_type(), "corr_2d_forward_zn_cuda", ( [&] {
         k_corr_2d_forward_zn<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
             r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
             r1.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
@@ -1241,7 +1241,7 @@ std::vector<torch::Tensor> corr_2d_backward_zn_cuda( torch::Tensor grad, torch::
     }
 
     // Kernel launch.
-    AT_DISPATCH_FLOATING_TYPES( r0.type(), "corr_2d_backward_zn_cuda_0", ( [&] {
+    AT_DISPATCH_FLOATING_TYPES( r0.scalar_type(), "corr_2d_backward_zn_cuda_0", ( [&] {
         k_corr_2d_backward_zn_0<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
             grad.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
             r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
@@ -1263,7 +1263,7 @@ std::vector<torch::Tensor> corr_2d_backward_zn_cuda( torch::Tensor grad, torch::
     }
 
     // Kernel launch.
-    AT_DISPATCH_FLOATING_TYPES( r1.type(), "corr_2d_backward_cuda_zn_1", ( [&] {
+    AT_DISPATCH_FLOATING_TYPES( r1.scalar_type(), "corr_2d_backward_cuda_zn_1", ( [&] {
         k_corr_2d_backward_zn_1<scalar_t><<<blocks, thrds, sizeSharedMemory*sizeof(scalar_t)>>>( 
             grad.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),
             r0.packed_accessor<scalar_t, 4, torch::RestrictPtrTraits, PTA_INDEX_TYPE>(),

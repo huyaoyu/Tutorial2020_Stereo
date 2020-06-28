@@ -155,7 +155,7 @@ def main():
     sample   = load_sample_data(flagGray=flagGray)
     pred     = predict(corrDisp, sample)
     # draw(sample, pred)
-    visualize(sample, pred, 'VisResult.png')
+    visualize(sample, pred, 'VisResultCorr.png')
 
     return 0
 
