@@ -42,9 +42,13 @@ def load_sample_data(flagGray=False, flagCuda=True):
 
     return sampleDict
 
-def load_model(flagCuda=True):
-    psmnu = PSMNU(1, 32, 256)
-    SampleLoader.load_model(psmnu, "./PreTrained/PU_03_PSMNet_02.pkl")
+def load_model(flagGray=False, flagCuda=True):
+    if ( flagGray ):
+        psmnu = PSMNU(1, 32, 256)
+        SampleLoader.load_model(psmnu, "./PreTrained/PU_03_PSMNet_02.pkl")
+    else:
+        psmnu = PSMNU(3, 32, 256)
+        SampleLoader.load_model(psmnu, "./PreTrained/PU_01_BGR_TuPSMNet.pkl")
 
     psmnu = torch.nn.DataParallel(psmnu)
 
@@ -145,11 +149,11 @@ def visualize( sampleDict, pred, sig, fn=None ):
 def main():
     print("Local test the PSMNU model. ")
     flagGray = True
-    psmnu  = load_model()
+    psmnu  = load_model(flagGray=flagGray)
     sample = load_sample_data(flagGray=flagGray)
     pred, sig = predict(psmnu, sample)
     # draw(sample, pred)
-    visualize(sample, pred, sig, 'VisResultUnct.png')
+    visualize(sample, pred, sig, 'VisResultUnctG.png')
 
     return 0
 
