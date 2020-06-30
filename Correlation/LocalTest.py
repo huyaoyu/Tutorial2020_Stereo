@@ -33,6 +33,22 @@ def permute_image(img):
     
     return img
 
+def b2mb(x): return int(x/2**20)
+
+class TorchTracemalloc():
+
+    def __enter__(self):
+        self.begin = torch.cuda.memory_allocated()
+        torch.cuda.reset_max_memory_allocated() # reset the peak gauge to zero
+        return self
+
+    def __exit__(self, *exc):
+        self.end  = torch.cuda.memory_allocated()
+        self.peak = torch.cuda.max_memory_allocated()
+        self.used   = b2mb(self.end-self.begin)
+        self.peaked = b2mb(self.peak-self.begin)
+        print(f"GPU memory end/peak usage (MB): {self.used:4d}/{self.peaked:4d}")
+
 class Predictor(object):
     def __init__(self, name='Default'):
         super(Predictor, self).__init__()
@@ -64,9 +80,9 @@ class Predictor(object):
 
         return startIdxH, endIdxH, startIdxW, endIdxW
 
-    def load_sample_data(self, fn0, fn1, fnD):
+    def load_sample_data(self, fn0, fn1, fnD, resize=None):
 
-        sampleDict = SampleLoader.load_sample(fn0, fn1, fnD, flagGray=self.flagGray)
+        sampleDict = SampleLoader.load_sample(fn0, fn1, fnD, flagGray=self.flagGray, resize=resize)
 
         H, W = sampleDict['t0'].size()[2:4]
 
@@ -113,12 +129,13 @@ class Predictor(object):
         self.model.eval()
         
         with torch.no_grad():
-            startTime = time.time()
+            with TorchTracemalloc() as tt:
+                startTime = time.time()
 
-            disp0, disp1, disp2, disp3, disp4, disp5 \
-                = self.model(sample['t0'], sample['t1'], torch.Tensor([0]), torch.Tensor([0]))
+                disp0, disp1, disp2, disp3, disp4, disp5 \
+                    = self.model(sample['t0'], sample['t1'], torch.Tensor([0]), torch.Tensor([0]))
 
-            endTime = time.time()
+                endTime = time.time()
         
             print("Predict in %fs. Size HxW: %dx%d. " % \
                 ( endTime - startTime, sample['t0'].size(2), sample['t0'].size(3) ))
@@ -213,8 +230,14 @@ class Predictor(object):
         else:
             fnD = None
 
+        # Check resize.
+        if 'resize' in caseDict.keys():
+            resize = caseDict['resize']
+        else:
+            resize = None
+
         sample = self.load_sample_data( 
-            caseDict['fn0'], caseDict['fn1'], fnD)
+            caseDict['fn0'], caseDict['fn1'], fnD, resize=resize)
         pred   = self.predict(sample)
 
         if ( fnD is not None ):

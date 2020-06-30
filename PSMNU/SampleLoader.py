@@ -5,16 +5,22 @@ import os
 import torch
 import torchvision
 
+from CommonPython.Filesystem import Filesystem
+
 from IO import readPFM
 
 def test_file(fn):
     if ( not os.path.isfile(fn) ):
         raise Exception("File %s not exist. " % (fn))
 
-def load_image(fn):
+def load_image(fn, resize=None):
     test_file(fn)
 
     img = cv2.imread(fn, cv2.IMREAD_UNCHANGED)
+    
+    if ( resize is not None ):
+        img = cv2.resize(img, ( resize[1], resize[0] ), interpolation=cv2.INTER_LINEAR)
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     return img, gray
@@ -32,7 +38,17 @@ def convert_2_tensor(img):
 def load_disp(fn):
     test_file(fn)
 
-    disp, scale = readPFM(fn)
+    # Get the ext of the filename.
+    parts = Filesystem.get_filename_parts(fn)
+
+    ext = parts[2].lower()
+
+    if ( '.pfm' == ext ):
+        disp, scale = readPFM(fn)
+    elif ( '.npy' == ext ):
+        disp = np.load(fn).astype(np.float32)
+    else:
+        raise Exception("Not supported ext {}. ".format(ext))
 
     return disp
 
@@ -58,29 +74,35 @@ class NormalizeRGB_OCV(object):
 
         return x
 
-def load_sample(fn0, fn1, disp0, flagGray=False):
+def load_sample(fn0, fn1, disp0=None, flagGray=False, resize=None):
     # Load the image by OpenCV
-    img0, gray0 = load_image(fn0)
-    img1, gray1 = load_image(fn1)
+    img0, gray0 = load_image(fn0, resize=resize)
+    img1, gray1 = load_image(fn1, resize=resize)
     
     # Convert the images to PyTorch tensors.
     if ( flagGray ):
         t0 = convert_2_tensor(gray0.astype(np.float32) / 255.0)
         t1 = convert_2_tensor(gray1.astype(np.float32) / 255.0)
     else:
-        normalizer = NormalizeRGB_OCV()
+        t0 = convert_2_tensor(img0)
+        t1 = convert_2_tensor(img1)
 
-        t0 = convert_2_tensor(normalizer(img0.astype(np.float32)))
-        t1 = convert_2_tensor(normalizer(img1.astype(np.float32)))
-
-    # Load the disparity.
-    disp = load_disp(disp0)
-    td = convert_2_tensor(disp.astype(np.float32))
+        normalizer = torchvision.transforms.Normalize(**imagenet_stats)
+        
+        t0 = normalizer(t0)
+        t1 = normalizer(t1)
 
     # Make dummy mini-batch.
     t0 = t0.unsqueeze(0)
     t1 = t1.unsqueeze(0)
-    td = td.unsqueeze(0)
+    
+    # Load the disparity.
+    if ( disp0 is not None ):
+        disp = load_disp(disp0)
+        td = convert_2_tensor(disp.astype(np.float32))
+        td = td.unsqueeze(0)
+    else:
+        td = None
 
     if ( flagGray ):
         return { \

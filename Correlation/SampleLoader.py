@@ -13,10 +13,14 @@ def test_file(fn):
     if ( not os.path.isfile(fn) ):
         raise Exception("File %s not exist. " % (fn))
 
-def load_image(fn):
+def load_image(fn, resize=None):
     test_file(fn)
 
     img = cv2.imread(fn, cv2.IMREAD_UNCHANGED)
+    
+    if ( resize is not None ):
+        img = cv2.resize(img, ( resize[1], resize[0] ), interpolation=cv2.INTER_LINEAR)
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     return img, gray
@@ -70,10 +74,10 @@ class NormalizeRGB_OCV(object):
 
         return x
 
-def load_sample(fn0, fn1, disp0, flagGray=False):
+def load_sample(fn0, fn1, disp0, flagGray=False, resize=None):
     # Load the image by OpenCV
-    img0, gray0 = load_image(fn0)
-    img1, gray1 = load_image(fn1)
+    img0, gray0 = load_image(fn0, resize=resize)
+    img1, gray1 = load_image(fn1, resize=resize)
     
     # Convert the images to PyTorch tensors.
     if ( flagGray ):
