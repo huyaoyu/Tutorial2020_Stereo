@@ -256,8 +256,6 @@ def main():
     # Read cases.
     cases = read_cases('./Cases.json')['cases']
 
-    flagGray = False
-
     # Create the predictor.
     predictorC = Predictor('CorrColor')
     predictorC.load_model('./PreTrained/ERFFK1C_01_PWCNS_00.pkl', flagGray=False, kernalSize=1)
