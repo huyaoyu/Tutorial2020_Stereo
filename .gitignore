@@ -1,6 +1,7 @@
 *.pyc
 *.jpg
 *.png
+*.pp3
 *.dat
 Data/
 data/
