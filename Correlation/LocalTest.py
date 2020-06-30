@@ -269,6 +269,9 @@ def main():
         resultFn = '%s_C.png' % ( case['name'] )
         predictorC(case, resultFn)
 
+    del predictorC
+    torch.cuda.empty_cache()
+
     # Create a grayscale predictor.
     predictorG = Predictor('CorrGray')
     predictorG.load_model('./PreTrained/ERFFK1_01_PWCNS_00.pkl', flagGray=True, kernalSize=1)

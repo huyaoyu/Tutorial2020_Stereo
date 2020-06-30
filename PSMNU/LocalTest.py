@@ -263,8 +263,6 @@ def main():
     # Read cases.
     cases = read_cases('./Cases.json')['cases']
 
-    flagGray = False
-
     # Create the predictor.
     predictorC = Predictor('PSMNUColor')
     predictorC.load_model('./PreTrained/PU_01_BGR_TuPSMNet.pkl', flagGray=False)
