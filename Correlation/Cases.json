@@ -1,23 +1,59 @@
 {
     "cases": [
         {
+            "enable": true,
             "fn0": "../SampleData/Shimizu/ShimizuBeam08/Rectified_L_color_ds.jpg", 
             "fn1": "../SampleData/Shimizu/ShimizuBeam08/Rectified_R_color_ds.jpg", 
             "name": "Shimizu_ShimizuBeam08",
-            "resize": [704, 960]
+            "resize": [704, 960],
+            "fnQ": "../SampleData/Shimizu/ShimizuBeam08/Q.dat",
+            "QF": 1.0,
+            "dOffs": 0.0,
+            "distLimit": 100.0
         },
         {
+            "enable": true,
             "fn0": "../SampleData/Middlebury_E3/TeddyH/im0.png", 
             "fn1": "../SampleData/Middlebury_E3/TeddyH/im1.png", 
             "fnD": "../SampleData/Middlebury_E3/TeddyH/disp0GT.pfm",
             "name": "ME_TeddyH",
-            "resize": [704, 832]
+            "resize": [704, 832],
+            "fnQ": "../SampleData/Middlebury_E3/TeddyH/Q.dat",
+            "QF": 1.0,
+            "dOffs": 104.0,
+            "distLimit": 100.0
         },
         {
+            "enable": true,
             "fn0": "../SampleData/SceneFlow_FlyingThings3D/Left/0006.png", 
             "fn1": "../SampleData/SceneFlow_FlyingThings3D/Right/0006.png", 
             "fnD": "../SampleData/SceneFlow_FlyingThings3D/Disparity/0006.pfm",
-            "name": "SceneFlow"
+            "name": "SceneFlow",
+            "fnQ": "../SampleData/SceneFlow_FlyingThings3D/Disparity/Q.dat",
+            "QF": 1.0,
+            "dOffs": 0.0,
+            "distLimit": 100.0
+        },
+        {
+            "enable": true,
+            "fn0": "../SampleData/KITTI/stereo_left.png", 
+            "fn1": "../SampleData/KITTI/stereo_right.png", 
+            "name": "KITTI",
+            "fnQ": "../SampleData/KITTI/Q.dat",
+            "QF": 1.0,
+            "dOffs": 0.0,
+            "distLimit": 100.0
+        },
+        {
+            "enable": true,
+            "fn0": "../SampleData/TartanAir/OldTown/EasyP000/001116_left.png",
+            "fn1": "../SampleData/TartanAir/OldTown/EasyP000/001116_right.png",
+            "fnD": "../SampleData/TartanAir/OldTown/EasyP000/001116_left_disp.npy",
+            "name": "TartanAir_OldTown",
+            "fnQ": "../SampleData/TartanAir/OldTown/EasyP000/Q.dat",
+            "QF": 1.0,
+            "dOffs": 0.0,
+            "distLimit": 100.0
         }
     ]
 }

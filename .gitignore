@@ -3,6 +3,7 @@
 *.png
 *.pp3
 *.dat
+*.ply
 Data/
 data/
 Build/

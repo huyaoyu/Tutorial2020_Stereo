@@ -13,6 +13,7 @@ from CommonPython.Filesystem import Filesystem
 from Model.PWCNetStereo import PWCNetStereoParams as ModelParams
 from Model.PWCNetStereo import PWCNetStereoRes as CorrDispModel
 import SampleLoader
+from PLYHelper import write_PLY
 from Visualization import visualize_results_with_true_disparity
 
 def read_cases(fn):
@@ -60,6 +61,7 @@ class Predictor(object):
         self.flagCuda = True
 
         self.sizeBase = 32
+        self.oriSize = None # (H, W)
 
     def find_closest(self, x):
         return x//self.sizeBase * self.sizeBase
@@ -85,6 +87,7 @@ class Predictor(object):
         sampleDict = SampleLoader.load_sample(fn0, fn1, fnD, flagGray=self.flagGray, resize=resize)
 
         H, W = sampleDict['t0'].size()[2:4]
+        self.oriSize = ( sampleDict['H'], sampleDict['W'] )
 
         startIdxH, endIdxH, startIdxW, endIdxW = self.find_crop_indices(H, W)
 
@@ -105,6 +108,31 @@ class Predictor(object):
                 sampleDict['disp0'] = sampleDict['disp0'].cuda()
 
         return sampleDict
+
+    def scale_q(self, Q, qf, oriSize, resize=None):
+        """oriSize is (H, W), resize is (H, W), Q is 4x4 NumPy array. """
+
+        if ( resize is not None ):
+            f = 1.0 * resize[1] / oriSize[1]
+            sampleSize = resize
+        else:
+            f = 1.0
+            sampleSize = oriSize
+
+        startIdxH, _, startIdxW, _ = self.find_crop_indices( sampleSize[0], sampleSize[1] )
+
+        Q = Q.copy()
+
+        # Scale.
+        Q[0, 3] *= f * qf # cx.
+        Q[1, 3] *= f * qf # cy.
+        Q[2, 3] *= f * qf # focal length.
+
+        # Crop.
+        Q[0, 3] += startIdxW # cx.
+        Q[1, 3] += startIdxH # cy.
+
+        return Q
 
     def load_model(self, fn, flagGray=False, maxDisp=4, kernalSize=1):
         self.flagGray = flagGray
@@ -245,6 +273,27 @@ class Predictor(object):
         else:
             self.draw(sample, pred, resultFn)
 
+        # Point cloud.
+        if ( 'fnQ' in caseDict.keys() ):
+            # Load Q.
+            Q = np.loadtxt( caseDict['fnQ'], dtype=np.float32 )
+            Q = self.scale_q(Q, caseDict['QF'], self.oriSize, resize)
+
+            # The disparity offset.
+            dispOff = pred.cpu().numpy() + caseDict['dOffs']
+
+            # Get the left image.
+            imgLeft = cv2.cvtColor( sample['img0'], cv2.COLOR_BGR2RGB )
+
+            # Write PLY file.
+            parts = Filesystem.get_filename_parts(resultFn)
+            plyFn = '%s/%s.ply' % (parts[0], parts[1])
+            write_PLY( plyFn, dispOff, Q, flagFlip=True, \
+                distLimit=caseDict['distLimit'], color=imgLeft )
+            
+            print('Point cloud saved to %s. ' % (plyFn))
+
+
     def __str__(self):
         return '{}: flagGray={}, flagCuda={}. '.format( \
             self.name, self.flagGray, self.flagCuda )
@@ -263,6 +312,9 @@ def main():
     
     # Predict.
     for case in cases:
+        if ( not case['enable'] ):
+            continue
+
         print('>>>(color) %s' % ( case['fn0']) )
         resultFn = '%s_C.png' % ( case['name'] )
         predictorC(case, resultFn)
@@ -277,6 +329,9 @@ def main():
 
     # Predict.
     for case in cases:
+        if ( not case['enable'] ):
+            continue
+
         print('>>>(Grayscale) %s' % case['fn0'])
         resultFn = '%s_G.png' % ( case['name'] )
         predictorG(case, resultFn)
