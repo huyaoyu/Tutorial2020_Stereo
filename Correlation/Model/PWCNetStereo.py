@@ -287,8 +287,6 @@ class WarpByDisparity(nn.Module):
 
         vgrid = grid.clone()
 
-        # import ipdb; ipdb.set_trace()
-
         # Only the x-coodinate is changed. 
         # Disparity values are always non-negative.
         vgrid[:, 0, :, :] = vgrid[:, 0, :, :] - disp.squeeze(1) # Disparity only has 1 channel. vgrid[:, 0, :, :] will only have 3 dims.
