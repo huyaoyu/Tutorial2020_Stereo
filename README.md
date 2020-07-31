@@ -12,7 +12,7 @@ This exersice code presents two popular deep-learning structures for passive bin
 
 ## 3D cost volume
 
-The backbone comes from the PSMNet[[1]](#PSMNet). The origina PSMNet is modified such that it also estimates the uncertainty of its own disparity prediction. This modified model is called PSMNU. Please refer to [[3]](#PSMNU) for more detail about PSMNU. 
+The backbone comes from the PSMNet[[1]](#PSMNet). The origina PSMNet is modified such that it also estimates the uncertainty of its own disparity prediction. This modified model is called PSMNU. Please refer to [[3]](#PSMNU) for more details about PSMNU. 
 
 ## Cross-correlation
 
@@ -28,18 +28,50 @@ Pre-trained models are provided here for exercice, not for benchmarking, since t
 
 ## System requirements
 
-These code and pre-trained models are tested on Ubuntu 18.0t LTS with PyTorch 1.0+.
+These code and pre-trained models are tested on Ubuntu 18.04 LTS with Python 3.6.9, CUDA 10, and PyTorch 1.0+.
 
 # Tutorial Video
 
 Coming soon, stay tuned.
 
 # Exercises
-## 3D cost volume exercise
+## Sample input data
 
+The sample input data are saved at [/SampleData](/SampleData) sub-directory. 
+
+## 3D cost volume exercise
+In thise exercise, we will use the pre-trained models which implementing the 3D cost volume to perform disparity estimation. The steps are very simple.
+
+1. Create a new sub-folder /PSMNU/Pretrained and place the pre-trained models in the newly created folder.
+2. Go to directory /PSMNU.
+3. `python3 LocalTest.py`.
+
+`LocalTest.py` reads the content in `/PSMNU/Cases.json`. Individual case can be disabled by setting the `"enable"` key to `"flase"`.
+
+If everything works smoothly, a bunch of results will be produced. For sample case that have ground truth data, an error map will be drawn alongside the disparity prediction.
+
+__sample output___
+
+The models also predict the per-pixel uncertainty of its disparity prediction. The uncertainty is shown in the above image at the lower right corner. The colormaps used in the above image can be found [here], specifically, xxx for disparity, xxx for disparity error compared with the ground truth, and xxx for uncertainty. 
+
+If the ground truth disparity is not available, then the result will look like the following iamge.
+
+__sample output without ground truth___
+
+If the camera parameters (intrinsic and extrinsic paramters) are known for a sample case, the reconstructed 3D point cloud will be generated.
 
 ## Cross-correlation exercise
 
+The cross-correlation layer has to be compiled and installed to the python environment before testing the pre-trained models. Steps aftet the installation are pretty much the same with the 3D cost volumne exercise.
+
+1. Go to /Correlation/CorrelationCUDA.
+2. Run `python3 setup.py build_ext --record InstalledFiles.txt`. Wait for the compilation process.
+3. Run `python3 setup.py install`. The cross-correlation layer will be installed to the current python environment. E.g, if you are using a virtual environment, the intallation destination will be the correct location specified by the virtual environment.
+4. Create a new sub-folder /Correlation/Pretrained and place in the pre-trained models.
+5. Go to /Correlation.
+6. Run `python3 LocalTest.py`.
+
+Similar to 3D cost volume exercise, `LocalTest.py` reads in `Cases.json` file and process all the enabled cases. Disparity error map and 3D point cloud will be generated if associated ground truth data or camera parameters are available.
 
 # References
 <a id="PSMNet">[1]</a> Chang, Jia-Ren, and Yong-Sheng Chen. "Pyramid stereo matching network." In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition, pp. 5410-5418. 2018.
