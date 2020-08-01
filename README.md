@@ -4,7 +4,7 @@
 
 This repository contains the exercise code for the course of __Recent Advances of Binocular Stereo Vision__ held by the [airlab][airlabss] in Carnegie Mellon University as a part of the Summer School 2020. 
 
-The course covers both recent non-learning and learning based methods. This repository contains the learning-based models discussed in the lecture. The non-learning part can be found [here](http://github.com).
+The course covers both recent non-learning and learning based methods. This repository contains the learning-based models discussed in the lecture. The non-learning part can be found [here](https://github.com/huyaoyu/Tutorial2020_Stereo_ROS).
 
 # Models
 
@@ -65,8 +65,8 @@ If the camera parameters (intrinsic and extrinsic paramters) are known for a sam
 The cross-correlation layer has to be compiled and installed to the python environment before testing the pre-trained models. Steps aftet the installation are pretty much the same with the 3D cost volumne exercise.
 
 1. Go to /Correlation/CorrelationCUDA.
-2. Run `python3 setup.py build_ext --record InstalledFiles.txt`. Wait for the compilation process.
-3. Run `python3 setup.py install`. The cross-correlation layer will be installed to the current python environment. E.g, if you are using a virtual environment, the intallation destination will be the correct location specified by the virtual environment.
+2. Run `python3 setup.py build_ext`. Wait for the compilation process.
+3. Run `python3 setup.py install --record InstalledFiles.txt`. The cross-correlation layer will be installed to the current python environment. E.g, if you are using a virtual environment, the intallation destination will be the correct location specified by the virtual environment. The `--record` command records the installed files during the installation. If you would like to remove the installed cross-correlation layer, use `cat InstalledFiles.txt | xargs rm -f`.
 4. Create a new sub-folder /Correlation/Pretrained and place in the pre-trained models.
 5. Go to /Correlation.
 6. Run `python3 LocalTest.py`.
