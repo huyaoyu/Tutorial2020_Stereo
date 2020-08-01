@@ -44,7 +44,7 @@ In thise exercise, we will use the pre-trained models which implementing the 3D 
 
 1. Create a new sub-folder /PSMNU/Pretrained and place the pre-trained models in the newly created folder.
 2. Go to directory /PSMNU.
-3. `python3 LocalTest.py`.
+3. Run `python3 LocalTest.py`.
 
 `LocalTest.py` reads the content in `/PSMNU/Cases.json`. Individual case can be disabled by setting the `"enable"` key to `"flase"`.
 
@@ -58,7 +58,7 @@ If the ground truth disparity is not available, then the result will look like t
 
 __sample output without ground truth___
 
-If the camera parameters (intrinsic and extrinsic paramters) are known for a sample case, the reconstructed 3D point cloud will be generated.
+If the camera parameters (intrinsic and extrinsic paramters) are known for a sample case, the reconstructed 3D point cloud will be generated as a PLY file.
 
 ## Cross-correlation exercise
 
