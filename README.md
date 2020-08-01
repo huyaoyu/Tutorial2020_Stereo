@@ -62,7 +62,7 @@ If everything works smoothly, a bunch of results will be produced. For sample ca
 
 The models also predict the per-pixel uncertainty of its disparity prediction. The uncertainty is shown in the above image at the lower right corner. The colormaps used in the above image can be found [here](https://colorcet.holoviz.org/user_guide/Continuous.html), specifically, `rainbow` for disparity, `coolwarm` for disparity error compared with the ground truth, and `CET_L19` for uncertainty.
 
-For disparity error and uncertainty maps, the numbers at the top left corners represents the average error (A), standard deviation (S), minimum uncertainty (min), and maximum uncertainty(max).
+For disparity error and uncertainty maps, the numbers at the top left corners represent the average error (A), standard deviation of the error (S), minimum uncertainty (min), and maximum uncertainty(max).
 
 If the ground truth disparity is not available, then the result will look like the following image.
 
@@ -81,7 +81,7 @@ The cross-correlation layer has to be compiled and installed to the python envir
 5. Go to /Correlation.
 6. Run `python3 LocalTest.py`.
 
-Similar to 3D cost volume exercise, `LocalTest.py` reads in `Cases.json` file and process all the enabled cases. Disparity error map and 3D point cloud will be generated if associated ground truth data or camera parameters are available. The color maps are the same with the PSMNU exercise. The following figure is one of the results of the sample cases. The four sections in this images, in the top-to-bottom and left-to-right order, are the Ref. image, true disparity, disparity error map and the predicted disparity.
+Similar to 3D cost volume exercise, `LocalTest.py` reads in `Cases.json` file and process all the enabled cases. Disparity error map and 3D point cloud will be generated if associated ground truth data or camera parameters are available. The color maps are the same with the PSMNU exercise. The following figure is one of the results of the sample cases. The four sections in this image, in the top-to-bottom and left-to-right order, are the Ref. image, true disparity, disparity error map and the predicted disparity.
 
 ![Correlation sample output](ReadMeResources/Correlation_SceneFlow_C.png)
 
