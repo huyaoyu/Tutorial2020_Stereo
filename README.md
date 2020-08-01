@@ -28,7 +28,15 @@ Pre-trained models are provided here for exercice, not for benchmarking, since t
 
 ## System requirements
 
-These code and pre-trained models are tested on Ubuntu 18.04 LTS with Python 3.6.9, CUDA 10, and PyTorch 1.0+.
+A GPU is required to run the exercises.
+
+These code and pre-trained models are tested on Ubuntu 18.04 LTS with Python 3.6.9, CUDA 10, and PyTorch 1.0+, TorchVision.
+
+Use the following command to install the required python packages to the current python environment (Not including PyTorch and TorchVision). 
+
+```python
+pip3 install opencv-python numba colorcet plyfile
+```
 
 # Tutorial Video
 
@@ -50,13 +58,13 @@ In thise exercise, we will use the pre-trained models which implementing the 3D 
 
 If everything works smoothly, a bunch of results will be produced. For sample case that have ground truth data, an error map will be drawn alongside the disparity prediction.
 
-__sample output___
+![PSMNU sample output](ReadMeResources/PSMNU_SceneFlow_C.png)
 
-The models also predict the per-pixel uncertainty of its disparity prediction. The uncertainty is shown in the above image at the lower right corner. The colormaps used in the above image can be found [here], specifically, xxx for disparity, xxx for disparity error compared with the ground truth, and xxx for uncertainty. 
+The models also predict the per-pixel uncertainty of its disparity prediction. The uncertainty is shown in the above image at the lower right corner. The colormaps used in the above image can be found [here](https://colorcet.holoviz.org/user_guide/Continuous.html), specifically, `rainbow` for disparity, `coolwarm` for disparity error compared with the ground truth, and `CET_L19` for uncertainty. 
 
 If the ground truth disparity is not available, then the result will look like the following iamge.
 
-__sample output without ground truth___
+![Correlation sample output](ReadMeResources/Correlation_SceneFlow_C.png)
 
 If the camera parameters (intrinsic and extrinsic paramters) are known for a sample case, the reconstructed 3D point cloud will be generated as a PLY file.
 
@@ -71,7 +79,7 @@ The cross-correlation layer has to be compiled and installed to the python envir
 5. Go to /Correlation.
 6. Run `python3 LocalTest.py`.
 
-Similar to 3D cost volume exercise, `LocalTest.py` reads in `Cases.json` file and process all the enabled cases. Disparity error map and 3D point cloud will be generated if associated ground truth data or camera parameters are available.
+Similar to 3D cost volume exercise, `LocalTest.py` reads in `Cases.json` file and process all the enabled cases. Disparity error map and 3D point cloud will be generated if associated ground truth data or camera parameters are available. The color maps are the same with the PSMNU exercise.
 
 # References
 <a id="PSMNet">[1]</a> Chang, Jia-Ren, and Yong-Sheng Chen. "Pyramid stereo matching network." In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition, pp. 5410-5418. 2018.
