@@ -56,15 +56,17 @@ In thise exercise, we will use the pre-trained models which implementing the 3D 
 
 `LocalTest.py` reads the content in `/PSMNU/Cases.json`. Individual case can be disabled by setting the `"enable"` key to `"flase"`.
 
-If everything works smoothly, a bunch of results will be produced. For sample case that have ground truth data, an error map will be drawn alongside the disparity prediction.
+If everything works smoothly, a bunch of results will be produced. For sample case that have ground truth data, an error map will be drawn alongside the disparity prediction. In the following figure, the first column contains the Ref. and Tst. images. The ground truth dsiparity is the top-center one and the prediction locates at the bottom-center.
 
 ![PSMNU sample output](ReadMeResources/PSMNU_SceneFlow_C.png)
 
-The models also predict the per-pixel uncertainty of its disparity prediction. The uncertainty is shown in the above image at the lower right corner. The colormaps used in the above image can be found [here](https://colorcet.holoviz.org/user_guide/Continuous.html), specifically, `rainbow` for disparity, `coolwarm` for disparity error compared with the ground truth, and `CET_L19` for uncertainty. 
+The models also predict the per-pixel uncertainty of its disparity prediction. The uncertainty is shown in the above image at the lower right corner. The colormaps used in the above image can be found [here](https://colorcet.holoviz.org/user_guide/Continuous.html), specifically, `rainbow` for disparity, `coolwarm` for disparity error compared with the ground truth, and `CET_L19` for uncertainty.
 
-If the ground truth disparity is not available, then the result will look like the following iamge.
+For disparity error and uncertainty maps, the numbers at the top left corners represents the average error (A), standard deviation (S), minimum uncertainty (min), and maximum uncertainty(max).
 
-![Correlation sample output](ReadMeResources/Correlation_SceneFlow_C.png)
+If the ground truth disparity is not available, then the result will look like the following image.
+
+![Output without true data](ReadMeResources/PSMNU_Beam08_C.png)
 
 If the camera parameters (intrinsic and extrinsic paramters) are known for a sample case, the reconstructed 3D point cloud will be generated as a PLY file.
 
@@ -79,7 +81,9 @@ The cross-correlation layer has to be compiled and installed to the python envir
 5. Go to /Correlation.
 6. Run `python3 LocalTest.py`.
 
-Similar to 3D cost volume exercise, `LocalTest.py` reads in `Cases.json` file and process all the enabled cases. Disparity error map and 3D point cloud will be generated if associated ground truth data or camera parameters are available. The color maps are the same with the PSMNU exercise.
+Similar to 3D cost volume exercise, `LocalTest.py` reads in `Cases.json` file and process all the enabled cases. Disparity error map and 3D point cloud will be generated if associated ground truth data or camera parameters are available. The color maps are the same with the PSMNU exercise. The following figure is one of the results of the sample cases. The four sections in this images, in the top-to-bottom and left-to-right order, are the Ref. image, true disparity, disparity error map and the predicted disparity.
+
+![Correlation sample output](ReadMeResources/Correlation_SceneFlow_C.png)
 
 # References
 <a id="PSMNet">[1]</a> Chang, Jia-Ren, and Yong-Sheng Chen. "Pyramid stereo matching network." In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition, pp. 5410-5418. 2018.
