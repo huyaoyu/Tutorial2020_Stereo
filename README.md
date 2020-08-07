@@ -40,7 +40,7 @@ pip3 install opencv-python numba colorcet plyfile
 
 # Tutorial Video
 
-Coming soon, stay tuned.
+Video is at [https://youtu.be/lwX5S0MIFzs](https://youtu.be/lwX5S0MIFzs).
 
 # Exercises
 ## Sample input data
